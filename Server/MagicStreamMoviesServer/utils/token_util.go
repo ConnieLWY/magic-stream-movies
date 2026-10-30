@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/ConnieLWY/go-movie-streaming/Server/MagicStreamMoviesServer/database"
@@ -22,8 +23,14 @@ type SignedDetails struct {
 	jwt.RegisteredClaims
 }
 
-var SECRET_KEY string = os.Getenv("SECRET_KEY")
-var SECRET_REFRESH_KEY string = os.Getenv("SECRET_REFRESH_KEY")
+const (
+	AccessTokenTTL  = 15 * time.Minute
+	RefreshTokenTTL = 7 * 24 * time.Hour
+)
+
+// Read lazily: package-level vars would be evaluated before main() loads .env.
+func secretKey() []byte        { return []byte(os.Getenv("SECRET_KEY")) }
+func secretRefreshKey() []byte { return []byte(os.Getenv("SECRET_REFRESH_KEY")) }
 
 func GenerateAllTokens(email, firstName, lastName, role, userId string) (string, string, error) {
 	claims := &SignedDetails{
@@ -35,13 +42,13 @@ func GenerateAllTokens(email, firstName, lastName, role, userId string) (string,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "MagicStream",
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(AccessTokenTTL)),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	signedToken, err := token.SignedString([]byte(SECRET_KEY))
+	signedToken, err := token.SignedString(secretKey())
 
 	if err != nil {
 		return "", "", err
@@ -56,13 +63,13 @@ func GenerateAllTokens(email, firstName, lastName, role, userId string) (string,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "MagicStream",
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(7 * 24 * time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(RefreshTokenTTL)),
 		},
 	}
 
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
 
-	signedRefreshToken, err := refreshToken.SignedString([]byte(SECRET_REFRESH_KEY))
+	signedRefreshToken, err := refreshToken.SignedString(secretRefreshKey())
 
 	if err != nil {
 		return "", "", err
@@ -99,22 +106,16 @@ func UpdateAllTokens(userId, token, refreshToken string, client *mongo.Client, c
 }
 
 func GetAccessToken(c *gin.Context) (string, error) {
-	// authHeader := c.Request.Header.Get("Authorization")
+	authHeader := c.Request.Header.Get("Authorization")
 
-	// if authHeader == "" {
-	// 	return "", errors.New("Authorization header is required")
-	// }
+	if authHeader == "" {
+		return "", errors.New("authorization header is required")
+	}
 
-	// tokenString := authHeader[len("Bearer "):]
+	tokenString, found := strings.CutPrefix(authHeader, "Bearer ")
 
-	// if tokenString == "" {
-	// 	return "", errors.New("Bearer token is required")
-	// }
-
-	tokenString, err := c.Cookie("access_token")
-
-	if err != nil {
-		return "", err
+	if !found || tokenString == "" {
+		return "", errors.New("bearer token is required")
 	}
 
 	return tokenString, nil
@@ -125,7 +126,7 @@ func ValidateToken(tokenString string) (*SignedDetails, error) {
 	claims := &SignedDetails{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(SECRET_KEY), nil
+		return secretKey(), nil
 	})
 
 	if err != nil {
@@ -180,7 +181,7 @@ func ValidateRefreshToken(tokenString string) (*SignedDetails, error) {
 	claims := &SignedDetails{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 
-		return []byte(SECRET_REFRESH_KEY), nil
+		return secretRefreshKey(), nil
 	})
 
 	if err != nil {

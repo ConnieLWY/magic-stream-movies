@@ -14,7 +14,7 @@ import useAuth from "./hook/useAuth";
 
 function App() {
   const navigate = useNavigate();
-  const { auth, setAuth } = useAuth();
+  const { setAuth } = useAuth();
 
   const updateMovieReview = (imdb_id: string) => {
     navigate(`/review/${imdb_id}`);
@@ -22,15 +22,12 @@ function App() {
 
   const handleLogout = async () => {
     try {
-      const response = await axiosClient.post("/logout", {
-        user_id: auth?.user_id,
-      });
-      console.log(response.data);
-      setAuth(null);
-      // localStorage.removeItem('user');
-      console.log("User logged out");
+      // Server identifies the user from the refresh_token cookie and clears it
+      await axiosClient.post("/logout");
     } catch (error) {
       console.error("Error logging out:", error);
+    } finally {
+      setAuth(null);
     }
   };
 

@@ -32,11 +32,9 @@ function Login() {
         setError(response.data.error);
         return;
       }
-      // console.log(response.data);
+      // Access token stays in memory (auth state); refresh token was set as an HttpOnly cookie
       setAuth(response.data);
 
-      // localStorage.setItem('user', JSON.stringify(response.data));
-      // Handle successful login (e.g., store token, redirect)
       navigate(from, { replace: true });
       //navigate('/');
     } catch (err) {

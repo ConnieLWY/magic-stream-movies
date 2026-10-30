@@ -7,7 +7,7 @@ export interface User {
   last_name: string
   email: string
   role: string
-  token: string
-  refresh_token: string
+  // Kept in memory only; the refresh token lives in an HttpOnly cookie
+  access_token: string
   favourite_genres: Genre[]
 }

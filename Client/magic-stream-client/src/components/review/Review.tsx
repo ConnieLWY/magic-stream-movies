@@ -65,7 +65,6 @@ function Review() {
             console.error(err);
             if (axios.isAxiosError(err) && err.response?.status === 401) {
                  console.error('Unauthorized access - redirecting to login');
-                 localStorage.removeItem('user');
                  setAuth(null);
                  navigate('/login');
             } else {
