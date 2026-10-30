@@ -42,9 +42,7 @@ function Review() {
         };
 
         fetchMovie();
-        // axiosPrivate is recreated every render
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [imdb_id]);
+    }, [axiosPrivate, imdb_id]);
 
     const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();

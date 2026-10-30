@@ -11,7 +11,7 @@ export interface Ranking {
 }
 
 export interface MovieModel {
-  id?: string
+  id: string
   imdb_id: string
   title: string
   poster_path: string

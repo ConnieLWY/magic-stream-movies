@@ -22,7 +22,7 @@ function Movies({ movies, message, updateMovieReview }: MoviesProps) {
   return (
     <Row xs={2} sm={3} md={4} lg={5} className="g-4">
       {movies.map((movie) => (
-        <Col key={movie.imdb_id}>
+        <Col key={movie.id}>
           <Movie movie={movie} updateMovieReview={updateMovieReview} />
         </Col>
       ))}

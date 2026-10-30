@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useRef} from 'react';
-import axios from 'axios';
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
 import useAuth from './useAuth';
 
@@ -9,6 +9,10 @@ type FailedQueueEntry = {
     resolve: () => void;
     reject: (reason?: unknown) => void;
 };
+
+interface RetryableRequestConfig extends InternalAxiosRequestConfig {
+    _retry?: boolean;
+}
 
 const useAxiosPrivate = () =>{
 
@@ -39,17 +43,22 @@ const useAxiosPrivate = () =>{
 
         const responseInterceptor = axiosAuth.interceptors.response.use(
         response => response,
-        async error => {
+        async (error: AxiosError) => {
             console.log('⚠ Interceptor caught error:', error);
-            const originalRequest = error.config;
+            const originalRequest = error.config as RetryableRequestConfig | undefined;
 
-        if (originalRequest.url.includes('/refresh') && error.response.status === 401) {
+            if (!originalRequest) {
+                return Promise.reject(error);
+            }
+
+        if (originalRequest.url?.includes('/refresh') && error.response?.status === 401) {
             //edge case where the refresh token is invalid or expired
             console.error('❌ Refresh token has expired or is invalid.');
             return Promise.reject(error); // fail directly, no retry
         }
 
-            if (error.response && error.response.status === 401 && !originalRequest._retry) {
+            if (error.response?.status === 401 && !originalRequest._retry) {
+                originalRequest._retry = true;
 
                 if (isRefreshing.current) {
                 return new Promise<void>((resolve, reject) => {
@@ -59,7 +68,6 @@ const useAxiosPrivate = () =>{
                 .catch(err => Promise.reject(err));
             }
 
-            originalRequest._retry = true;
             isRefreshing.current = true;
 
             return new Promise((resolve, reject) => {
@@ -78,8 +86,14 @@ const useAxiosPrivate = () =>{
 
                         processQueue(refreshError);
 
-                        localStorage.removeItem('user');
-                        setAuth(null); // Clear auth state
+                        if (
+                            axios.isAxiosError(refreshError) &&
+                            (refreshError.response?.status === 401 ||
+                                refreshError.response?.status === 403)
+                        ) {
+                            localStorage.removeItem('user');
+                            setAuth(null); // Clear auth state
+                        }
                         reject(refreshError); // fail the original promise chain
                 })
                 .finally(() => {

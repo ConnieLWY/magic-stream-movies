@@ -1,22 +1,28 @@
-import Card from 'react-bootstrap/Card'
-import Badge from 'react-bootstrap/Badge'
-import Button from 'react-bootstrap/Button'
-import type { MovieModel } from '../../types/movie'
+import Card from "react-bootstrap/Card";
+import Badge from "react-bootstrap/Badge";
+import Button from "react-bootstrap/Button";
+import type { MovieModel } from "../../types/movie";
+import { Link } from "react-router-dom";
 
 interface MovieProps {
-  movie: MovieModel
-  updateMovieReview?: (imdb_id: string) => void
+  movie: MovieModel;
+  updateMovieReview?: (imdb_id: string) => void;
 }
 
 function Movie({ movie, updateMovieReview }: MovieProps) {
   return (
-    <Card className="h-100 shadow-sm">
-      <Card.Img
-        variant="top"
-        src={movie.poster_path}
-        alt={movie.title}
-        style={{ aspectRatio: '2 / 3', objectFit: 'cover' }}
-      />
+    <Card className="h-100 shadow-sm" key={movie.id}>
+      <Link
+        to={`/stream/${movie.youtube_id}`}
+        style={{ textDecoration: "none", color: "inherit" }}
+      >
+        <Card.Img
+          variant="top"
+          src={movie.poster_path}
+          alt={movie.title}
+          style={{ aspectRatio: "2 / 3", objectFit: "cover" }}
+        />
+      </Link>
       <Card.Body className="d-flex flex-column">
         <Card.Title className="fs-6">{movie.title}</Card.Title>
         <Card.Text className="text-muted small mb-2">{movie.imdb_id}</Card.Text>
@@ -39,7 +45,7 @@ function Movie({ movie, updateMovieReview }: MovieProps) {
         </div>
       </Card.Body>
     </Card>
-  )
+  );
 }
 
-export default Movie
+export default Movie;

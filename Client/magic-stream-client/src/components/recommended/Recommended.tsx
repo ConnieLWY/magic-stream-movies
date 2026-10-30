@@ -32,9 +32,7 @@ function Recommended() {
     };
 
     fetchRecommendedMovies();
-    // Run once on mount; axiosPrivate is recreated every render
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [axiosPrivate]);
 
   return (
     <Container className="py-4">
