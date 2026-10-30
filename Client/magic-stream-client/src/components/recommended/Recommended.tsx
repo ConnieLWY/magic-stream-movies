@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import Container from "react-bootstrap/Container";
-import Spinner from "react-bootstrap/Spinner";
 import useAxiosPrivate from "../../hook/useAxiosPrivate";
-import Movies from "../movies/Movies";
+import useAuth from "../../hook/useAuth";
+import Movies, { MovieGridSkeleton } from "../movies/Movies";
+import { SparkIcon } from "../brand/Icons";
 import type { MovieModel } from "../../types/movie";
 
 function Recommended() {
@@ -10,6 +11,7 @@ function Recommended() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const axiosPrivate = useAxiosPrivate();
+  const { auth } = useAuth();
 
   useEffect(() => {
     const fetchRecommendedMovies = async () => {
@@ -34,18 +36,28 @@ function Recommended() {
     fetchRecommendedMovies();
   }, [axiosPrivate]);
 
-  return (
-    <Container className="py-4">
-      <h2 className="mb-1">Recommended for you</h2>
-      <p className="text-muted mb-4">Picked from your favourite genres</p>
+  const favourites = auth?.favourite_genres ?? [];
 
-      {loading ? (
-        <div className="d-flex justify-content-center my-5">
-          <Spinner animation="border" role="status" />
-        </div>
-      ) : (
-        <Movies movies={movies} message={message} />
-      )}
+  return (
+    <Container className="section">
+      <header className="page-head">
+        <span className="eyebrow">
+          <SparkIcon size={12} /> Curated for {auth?.first_name ?? "you"}
+        </span>
+        <h1>Picked for you</h1>
+        <p>Conjured from the genres you love.</p>
+        {favourites.length > 0 && (
+          <div className="chip-row mt-3">
+            {favourites.map((g) => (
+              <span key={g.genre_id} className="pill">
+                {g.genre_name}
+              </span>
+            ))}
+          </div>
+        )}
+      </header>
+
+      {loading ? <MovieGridSkeleton /> : <Movies movies={movies} message={message} />}
     </Container>
   );
 }

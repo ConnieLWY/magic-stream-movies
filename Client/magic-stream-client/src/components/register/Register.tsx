@@ -1,8 +1,6 @@
 import { useEffect, useState, type SubmitEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import Container from 'react-bootstrap/Container'
-import Card from 'react-bootstrap/Card'
 import Form from 'react-bootstrap/Form'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
@@ -11,6 +9,7 @@ import Alert from 'react-bootstrap/Alert'
 import Spinner from 'react-bootstrap/Spinner'
 import { axiosClient } from '../../api/axiosConfig';
 import type { Genre } from '../../types/movie';
+import AuthShell from '../auth/AuthShell';
 
 function Register() {
     const [firstName, setFirstName] = useState('');
@@ -92,107 +91,112 @@ function Register() {
     }
 
   return (
-    <Container className="py-5" style={{ maxWidth: 560 }}>
-        <Card className="shadow-sm">
-            <Card.Body className="p-4">
-                <h2 className="mb-4 text-center">Create an account</h2>
+    <AuthShell wide>
+        <h1>Create your account</h1>
+        <p className="lede">Tell us what you love and we'll fill your screen with it.</p>
 
-                {error && <Alert variant="danger">{error}</Alert>}
+        {error && <Alert variant="danger">{error}</Alert>}
 
-                <Form onSubmit={handleSubmit}>
-                    <Row className="g-3 mb-3">
-                        <Col sm={6}>
-                            <Form.Group controlId="firstName">
-                                <Form.Label>First name</Form.Label>
-                                <Form.Control
-                                    value={firstName}
-                                    onChange={(e) => setFirstName(e.target.value)}
-                                    required
-                                />
-                            </Form.Group>
-                        </Col>
-                        <Col sm={6}>
-                            <Form.Group controlId="lastName">
-                                <Form.Label>Last name</Form.Label>
-                                <Form.Control
-                                    value={lastName}
-                                    onChange={(e) => setLastName(e.target.value)}
-                                    required
-                                />
-                            </Form.Group>
-                        </Col>
-                    </Row>
-
-                    <Form.Group className="mb-3" controlId="email">
-                        <Form.Label>Email</Form.Label>
+        <Form onSubmit={handleSubmit}>
+            <Row className="g-3 mb-3">
+                <Col sm={6}>
+                    <Form.Group controlId="firstName">
+                        <Form.Label>First name</Form.Label>
                         <Form.Control
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            autoComplete="email"
+                            value={firstName}
+                            onChange={(e) => setFirstName(e.target.value)}
+                            autoComplete="given-name"
                             required
                         />
                     </Form.Group>
-
-                    <Row className="g-3 mb-3">
-                        <Col sm={6}>
-                            <Form.Group controlId="password">
-                                <Form.Label>Password</Form.Label>
-                                <Form.Control
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    autoComplete="new-password"
-                                    minLength={6}
-                                    required
-                                />
-                            </Form.Group>
-                        </Col>
-                        <Col sm={6}>
-                            <Form.Group controlId="confirmPassword">
-                                <Form.Label>Confirm password</Form.Label>
-                                <Form.Control
-                                    type="password"
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    autoComplete="new-password"
-                                    isInvalid={confirmPassword !== '' && password !== confirmPassword}
-                                    required
-                                />
-                                <Form.Control.Feedback type="invalid">
-                                    Passwords do not match
-                                </Form.Control.Feedback>
-                            </Form.Group>
-                        </Col>
-                    </Row>
-
-                    <Form.Group className="mb-4">
-                        <Form.Label>Favourite genres</Form.Label>
-                        <div className="d-flex flex-wrap gap-3">
-                            {genres.map((genre) => (
-                                <Form.Check
-                                    key={genre.genre_id}
-                                    id={`genre-${genre.genre_id}`}
-                                    type="checkbox"
-                                    label={genre.genre_name}
-                                    checked={favouriteGenres.some((g) => g.genre_id === genre.genre_id)}
-                                    onChange={() => toggleGenre(genre)}
-                                />
-                            ))}
-                        </div>
+                </Col>
+                <Col sm={6}>
+                    <Form.Group controlId="lastName">
+                        <Form.Label>Last name</Form.Label>
+                        <Form.Control
+                            value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
+                            autoComplete="family-name"
+                            required
+                        />
                     </Form.Group>
+                </Col>
+            </Row>
 
-                    <Button type="submit" className="w-100" disabled={loading}>
-                        {loading ? <Spinner animation="border" size="sm" /> : 'Register'}
-                    </Button>
-                </Form>
+            <Form.Group className="mb-3" controlId="email">
+                <Form.Label>Email</Form.Label>
+                <Form.Control
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
+                    required
+                />
+            </Form.Group>
 
-                <p className="text-center mt-3 mb-0">
-                    Already have an account? <Link to="/login">Login</Link>
-                </p>
-            </Card.Body>
-        </Card>
-    </Container>
+            <Row className="g-3 mb-4">
+                <Col sm={6}>
+                    <Form.Group controlId="password">
+                        <Form.Label>Password</Form.Label>
+                        <Form.Control
+                            type="password"
+                            placeholder="At least 6 characters"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            autoComplete="new-password"
+                            minLength={6}
+                            required
+                        />
+                    </Form.Group>
+                </Col>
+                <Col sm={6}>
+                    <Form.Group controlId="confirmPassword">
+                        <Form.Label>Confirm password</Form.Label>
+                        <Form.Control
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            autoComplete="new-password"
+                            isInvalid={confirmPassword !== '' && password !== confirmPassword}
+                            required
+                        />
+                        <Form.Control.Feedback type="invalid">
+                            Passwords do not match
+                        </Form.Control.Feedback>
+                    </Form.Group>
+                </Col>
+            </Row>
+
+            <fieldset className="mb-4">
+                <legend className="form-label">
+                    Favourite genres{' '}
+                    <span className="text-muted fw-normal">({favouriteGenres.length} selected)</span>
+                </legend>
+                <div className="chip-row">
+                    {genres.map((genre) => (
+                        <button
+                            key={genre.genre_id}
+                            type="button"
+                            className="chip"
+                            aria-pressed={favouriteGenres.some((g) => g.genre_id === genre.genre_id)}
+                            onClick={() => toggleGenre(genre)}
+                        >
+                            {genre.genre_name}
+                        </button>
+                    ))}
+                </div>
+            </fieldset>
+
+            <Button type="submit" variant="brand" size="lg" className="w-100" disabled={loading}>
+                {loading ? <Spinner animation="border" size="sm" /> : 'Create account'}
+            </Button>
+        </Form>
+
+        <p className="auth-switch">
+            Already a member? <Link to="/login">Sign in</Link>
+        </p>
+    </AuthShell>
   )
 }
 

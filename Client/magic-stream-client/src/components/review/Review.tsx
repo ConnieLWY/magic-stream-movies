@@ -1,17 +1,15 @@
 import { useEffect, useRef, useState, type SubmitEvent } from 'react'
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import Container from 'react-bootstrap/Container'
-import Row from 'react-bootstrap/Row'
-import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
-import Badge from 'react-bootstrap/Badge'
 import Spinner from 'react-bootstrap/Spinner'
 import Alert from 'react-bootstrap/Alert'
 import useAuth from '../../hook/useAuth';
 import useAxiosPrivate from '../../hook/useAxiosPrivate';
 import type { MovieModel } from '../../types/movie';
+import { ArrowLeftIcon, PlayIcon } from '../brand/Icons';
 
 function Review() {
     const [movie, setMovie] = useState<MovieModel | null>(null);
@@ -81,78 +79,93 @@ function Review() {
 
   if (loading) {
     return (
-        <div className="d-flex justify-content-center my-5">
-            <Spinner animation="border" role="status" />
-        </div>
+        <Container className="detail-grid">
+            <div className="skeleton skeleton-poster" />
+            <div>
+                <div className="skeleton skeleton-line" style={{ width: '30%' }} />
+                <div className="skeleton mt-3" style={{ height: '3rem', width: '70%' }} />
+                <div className="skeleton mt-4" style={{ height: '10rem' }} />
+            </div>
+        </Container>
     )
   }
 
   if (!movie) {
     return (
-        <Container className="py-4">
-            <Alert variant="secondary" className="text-center">{error ?? 'Movie not found'}</Alert>
+        <Container className="section">
+            <div className="empty-state">{error ?? 'Movie not found'}</div>
         </Container>
     )
   }
 
   return (
-    <Container className="py-4">
-        <Row className="g-4">
-            <Col md={4}>
-                <img
-                    src={movie.poster_path}
-                    alt={movie.title}
-                    className="img-fluid rounded shadow-sm w-100"
-                    style={{ aspectRatio: '2 / 3', objectFit: 'cover' }}
-                />
-            </Col>
+    <section className="detail-hero">
+        <div className="hero-backdrop" style={{ backgroundImage: `url(${movie.poster_path})` }} />
+        <Container>
+            <div className="detail-grid">
+                <img src={movie.poster_path} alt={movie.title} className="detail-poster" />
 
-            <Col md={8}>
-                <h2 className="mb-1">{movie.title}</h2>
-                <p className="text-muted mb-3">{movie.imdb_id}</p>
+                <div>
+                    <button type="button" className="btn btn-link-subtle" onClick={() => navigate(-1)}>
+                        <ArrowLeftIcon size={14} /> Back
+                    </button>
+                    <h1 className="detail-title">{movie.title}</h1>
 
-                <div className="d-flex flex-wrap gap-2 mb-4">
-                    {movie.ranking?.ranking_name && (
-                        <Badge bg="warning" text="dark">{movie.ranking.ranking_name}</Badge>
+                    <div className="hero-meta">
+                        {movie.ranking?.ranking_name && (
+                            <span className="pill pill-rank">{movie.ranking.ranking_name}</span>
+                        )}
+                        {movie.genre?.map((g) => (
+                            <span key={g.genre_id} className="pill">{g.genre_name}</span>
+                        ))}
+                        <span className="pill text-muted">{movie.imdb_id}</span>
+                    </div>
+
+                    {movie.youtube_id && (
+                        <Link to={`/stream/${movie.youtube_id}`} className="btn btn-brand">
+                            <PlayIcon size={16} /> Watch trailer
+                        </Link>
                     )}
-                    {movie.genre?.map((g) => (
-                        <Badge key={g.genre_id} bg="secondary">{g.genre_name}</Badge>
-                    ))}
+
+                    <div className="surface review-card">
+                        <h2>Critic's review</h2>
+
+                        {error && <Alert variant="danger" dismissible onClose={() => setError(null)}>{error}</Alert>}
+
+                        {isAdmin ? (
+                            <Form onSubmit={handleSubmit}>
+                                <Form.Group className="mb-3" controlId="adminReview">
+                                    <Form.Label className="visually-hidden">Review</Form.Label>
+                                    <Form.Control
+                                        as="textarea"
+                                        rows={6}
+                                        ref={revText}
+                                        defaultValue={movie.admin_review}
+                                        placeholder="Write your review..."
+                                        required
+                                    />
+                                </Form.Group>
+                                <Button type="submit" variant="brand" disabled={saving}>
+                                    {saving ? (
+                                        <>
+                                            <Spinner animation="border" size="sm" />
+                                            Saving...
+                                        </>
+                                    ) : (
+                                        'Publish review'
+                                    )}
+                                </Button>
+                            </Form>
+                        ) : movie.admin_review ? (
+                            <blockquote className="review-quote">{movie.admin_review}</blockquote>
+                        ) : (
+                            <p className="text-muted mb-0">No review yet.</p>
+                        )}
+                    </div>
                 </div>
-
-                <h5>Admin review</h5>
-
-                {error && <Alert variant="danger" dismissible onClose={() => setError(null)}>{error}</Alert>}
-
-                {isAdmin ? (
-                    <Form onSubmit={handleSubmit}>
-                        <Form.Group className="mb-3" controlId="adminReview">
-                            <Form.Control
-                                as="textarea"
-                                rows={6}
-                                ref={revText}
-                                defaultValue={movie.admin_review}
-                                placeholder="Write your review..."
-                                required
-                            />
-                        </Form.Group>
-                        <Button type="submit" disabled={saving}>
-                            {saving ? (
-                                <>
-                                    <Spinner animation="border" size="sm" className="me-2" />
-                                    Saving...
-                                </>
-                            ) : (
-                                'Submit review'
-                            )}
-                        </Button>
-                    </Form>
-                ) : (
-                    <p className="mb-0">{movie.admin_review || <span className="text-muted">No review yet.</span>}</p>
-                )}
-            </Col>
-        </Row>
-    </Container>
+            </div>
+        </Container>
+    </section>
   )
 }
 

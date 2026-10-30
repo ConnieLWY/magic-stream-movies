@@ -1,8 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import ReactPlayer from "react-player";
 import Container from "react-bootstrap/Container";
-import Button from "react-bootstrap/Button";
-import Alert from "react-bootstrap/Alert";
+import { ArrowLeftIcon } from "../brand/Icons";
 
 function StreamMovie() {
   const { yt_id } = useParams();
@@ -10,25 +9,22 @@ function StreamMovie() {
 
   if (!yt_id) {
     return (
-      <Container className="py-4">
-        <Alert variant="secondary" className="text-center">
-          No video selected
-        </Alert>
+      <Container className="section">
+        <div className="empty-state">No video selected</div>
       </Container>
     );
   }
 
   return (
-    <Container className="py-4">
-      <Button
-        variant="outline-secondary"
-        size="sm"
-        className="mb-3"
+    <Container className="theater">
+      <button
+        type="button"
+        className="btn btn-ghost btn-sm mb-4"
         onClick={() => navigate(-1)}
       >
-        &larr; Back
-      </Button>
-      <div className="ratio ratio-16x9 rounded overflow-hidden shadow-sm bg-black">
+        <ArrowLeftIcon size={14} /> Back
+      </button>
+      <div className="theater-stage ratio ratio-16x9">
         <ReactPlayer
           src={`https://www.youtube.com/watch?v=${yt_id}`}
           controls

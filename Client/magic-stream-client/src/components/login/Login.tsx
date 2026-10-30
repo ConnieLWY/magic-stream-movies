@@ -1,6 +1,4 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import Container from "react-bootstrap/Container";
-import Card from "react-bootstrap/Card";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Alert from "react-bootstrap/Alert";
@@ -8,6 +6,8 @@ import Spinner from "react-bootstrap/Spinner";
 import { useState, type SubmitEvent } from "react";
 import { axiosClient } from "../../api/axiosConfig";
 import useAuth from "../../hook/useAuth";
+import { BRAND } from "../../brand";
+import AuthShell from "../auth/AuthShell";
 
 function Login() {
   const { setAuth } = useAuth();
@@ -48,60 +48,58 @@ function Login() {
   };
 
   return (
-    <Container className="py-5" style={{ maxWidth: 420 }}>
-      <Card className="shadow-sm">
-        <Card.Body className="p-4">
-          <h2 className="mb-4 text-center">Sign in</h2>
+    <AuthShell>
+      <h1>Welcome back</h1>
+      <p className="lede">Sign in to pick up where the credits left off.</p>
 
-          {error && (
-            <Alert variant="danger" dismissible onClose={() => setError(null)}>
-              {error}
-            </Alert>
+      {error && (
+        <Alert variant="danger" dismissible onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
+
+      <Form onSubmit={handleSubmit}>
+        <Form.Group className="mb-3" controlId="email">
+          <Form.Label>Email</Form.Label>
+          <Form.Control
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            autoFocus
+            required
+          />
+        </Form.Group>
+
+        <Form.Group className="mb-4" controlId="password">
+          <Form.Label>Password</Form.Label>
+          <Form.Control
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+            required
+          />
+        </Form.Group>
+
+        <Button type="submit" variant="brand" size="lg" className="w-100" disabled={loading}>
+          {loading ? (
+            <>
+              <Spinner animation="border" size="sm" />
+              Signing in...
+            </>
+          ) : (
+            "Sign in"
           )}
+        </Button>
+      </Form>
 
-          <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-3" controlId="email">
-              <Form.Label>Email</Form.Label>
-              <Form.Control
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
-                autoFocus
-                required
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-4" controlId="password">
-              <Form.Label>Password</Form.Label>
-              <Form.Control
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-                required
-              />
-            </Form.Group>
-
-            <Button type="submit" className="w-100" disabled={loading}>
-              {loading ? (
-                <>
-                  <Spinner animation="border" size="sm" className="me-2" />
-                  Signing in...
-                </>
-              ) : (
-                "Login"
-              )}
-            </Button>
-          </Form>
-
-          <p className="text-center mt-3 mb-0">
-            Don't have an account? <Link to="/register">Register</Link>
-          </p>
-        </Card.Body>
-      </Card>
-    </Container>
+      <p className="auth-switch">
+        New to {BRAND.name}? <Link to="/register">Create an account</Link>
+      </p>
+    </AuthShell>
   );
 }
 
