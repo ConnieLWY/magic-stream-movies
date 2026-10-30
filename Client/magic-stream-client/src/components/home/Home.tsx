@@ -6,12 +6,15 @@ import Movies, { MovieGridSkeleton } from "../movies/Movies";
 import { PenIcon, PlayIcon, SparkIcon } from "../brand/Icons";
 import { BRAND } from "../../brand";
 import type { Genre, MovieModel } from "../../types/movie";
+import useAuth from "../../hook/useAuth";
 
 interface HomeProps {
   updateMovieReview?: (imdb_id: string) => void;
 }
 
 function Home({ updateMovieReview }: HomeProps) {
+  const { auth } = useAuth();
+  const isAdmin = auth?.role === "ADMIN";
   const [movies, setMovies] = useState<MovieModel[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -96,13 +99,19 @@ function Home({ updateMovieReview }: HomeProps) {
                     <PlayIcon size={18} /> Watch trailer
                   </Link>
                 )}
-                {updateMovieReview && (
+                {updateMovieReview && auth && (
                   <button
                     type="button"
                     className="btn btn-ghost btn-lg"
                     onClick={() => updateMovieReview(featured.imdb_id)}
                   >
-                    <PenIcon size={16} /> Read review
+                    {isAdmin ? (
+                      <>
+                        <PenIcon size={16} /> Edit review
+                      </>
+                    ) : (
+                      "Read review"
+                    )}
                   </button>
                 )}
               </div>

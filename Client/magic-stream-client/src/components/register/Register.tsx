@@ -9,6 +9,8 @@ import Alert from 'react-bootstrap/Alert'
 import Spinner from 'react-bootstrap/Spinner'
 import { axiosClient } from '../../api/axiosConfig';
 import type { Genre } from '../../types/movie';
+import type { User } from '../../types/user';
+import useAuth from '../../hook/useAuth';
 import AuthShell from '../auth/AuthShell';
 
 function Register() {
@@ -23,6 +25,7 @@ function Register() {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const { setAuth } = useAuth();
 
     useEffect(() => {
         const fetchGenres = async () => {
@@ -50,13 +53,13 @@ function Register() {
         e.preventDefault();
         setError(null);
 
-        // Mirror the server-side validation in models.User
+        // Mirror the server-side validation in models.UserRegister
         if (firstName.trim().length < 2 || lastName.trim().length < 2) {
             setError("First and last name must be at least 2 characters");
             return;
         }
-        if (password.length < 6) {
-            setError("Password must be at least 6 characters");
+        if (password.length < 8) {
+            setError("Password must be at least 8 characters");
             return;
         }
         if (password !== confirmPassword) {
@@ -70,15 +73,16 @@ function Register() {
 
         setLoading(true);
         try {
-            await axiosClient.post('/register', {
+            // Registering also signs the user in: the response matches /auth/login
+            const response = await axiosClient.post<User>('/auth/register', {
                 first_name: firstName.trim(),
                 last_name: lastName.trim(),
                 email: email.trim(),
                 password,
-                role: 'USER',
-                favourite_genres: favouriteGenres,
+                favourite_genre_ids: favouriteGenres.map((g) => g.genre_id),
             });
-            navigate('/login', { replace: true });
+            setAuth(response.data);
+            navigate('/', { replace: true });
         } catch (err) {
             if (axios.isAxiosError(err) && err.response?.data?.error) {
                 setError(err.response.data.error);
@@ -141,11 +145,11 @@ function Register() {
                         <Form.Label>Password</Form.Label>
                         <Form.Control
                             type="password"
-                            placeholder="At least 6 characters"
+                            placeholder="At least 8 characters"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             autoComplete="new-password"
-                            minLength={6}
+                            minLength={8}
                             required
                         />
                     </Form.Group>

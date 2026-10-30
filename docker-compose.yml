@@ -1,0 +1,27 @@
+# Start MongoDB and the backend locally:
+#   docker compose up -d --build
+#   docker compose run --rm --entrypoint /app/seed server   # load seed data
+# The backend reads Server/MagicStreamMoviesServer/.env, with MONGODB_URI pointed at the mongo service below.
+services:
+  mongo:
+    image: mongo:8
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      retries: 10
+
+  server:
+    build: ./Server/MagicStreamMoviesServer
+    env_file: ./Server/MagicStreamMoviesServer/.env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+    ports:
+      - "8080:8080"
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+volumes:
+  mongo-data:

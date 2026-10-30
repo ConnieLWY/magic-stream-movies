@@ -18,7 +18,7 @@ let refreshInFlight: Promise<User> | null = null
 export function refreshSession(): Promise<User> {
     if (!refreshInFlight) {
         refreshInFlight = axiosClient
-            .post<User>('/refresh')
+            .post<User>('/auth/refresh')
             .then(response => response.data)
             .finally(() => {
                 refreshInFlight = null

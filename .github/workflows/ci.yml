@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Server/MagicStreamMoviesServer
+    services:
+      mongo:
+        image: mongo:8
+        ports: ["27017:27017"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: Server/MagicStreamMoviesServer/go.mod
+          cache-dependency-path: Server/MagicStreamMoviesServer/go.sum
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
+      - run: go vet ./...
+      - name: test (including MongoDB integration tests)
+        run: go test -race ./...
+        env:
+          MONGODB_TEST_URI: mongodb://localhost:27017
+      - run: go build ./...
+
+  client:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Client/magic-stream-client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: Client/magic-stream-client/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build

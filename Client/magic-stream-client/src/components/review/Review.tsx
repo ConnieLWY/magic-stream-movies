@@ -8,7 +8,7 @@ import Spinner from 'react-bootstrap/Spinner'
 import Alert from 'react-bootstrap/Alert'
 import useAuth from '../../hook/useAuth';
 import useAxiosPrivate from '../../hook/useAxiosPrivate';
-import type { MovieModel } from '../../types/movie';
+import type { MovieModel, ReviewUpdateResponse } from '../../types/movie';
 import { ArrowLeftIcon, PlayIcon } from '../brand/Icons';
 
 function Review() {
@@ -18,7 +18,7 @@ function Review() {
     const [error, setError] = useState<string | null>(null);
     const revText = useRef<HTMLTextAreaElement>(null);
     const { imdb_id } = useParams();
-    const {auth,setAuth} = useAuth();
+    const { auth } = useAuth();
     const axiosPrivate = useAxiosPrivate();
     const navigate = useNavigate();
 
@@ -29,7 +29,7 @@ function Review() {
         const fetchMovie = async () => {
             setLoading(true);
             try {
-                const response = await axiosPrivate.get<MovieModel>(`/movie/${imdb_id}`);
+                const response = await axiosPrivate.get<MovieModel>(`/movies/${imdb_id}`);
                 setMovie(response.data);
             } catch (error) {
                 console.error('Error fetching movie:', error);
@@ -49,28 +49,21 @@ function Review() {
         setSaving(true);
         setError(null);
         try {
-
-            const response = await axiosPrivate.patch(`/updatereview/${imdb_id}`, { admin_review: revText.current.value });
-
-            setMovie((prev) => prev && ({
-                ...prev,
-                admin_review: response.data?.admin_review ?? prev.admin_review,
-                ranking: {
-                    ranking_value: prev.ranking?.ranking_value ?? 0,
-                    ranking_name: response.data?.ranking_name ?? prev.ranking?.ranking_name ?? ''
-                }
-            }));
-
+            const response = await axiosPrivate.patch<ReviewUpdateResponse>(
+                `/movies/${imdb_id}/review`,
+                { admin_review: revText.current.value },
+            );
+            const { admin_review, ranking } = response.data;
+            setMovie((prev) => prev && { ...prev, admin_review, ranking });
         } catch (err) {
-            console.error(err);
-            if (axios.isAxiosError(err) && err.response?.status === 401) {
-                 console.error('Unauthorized access - redirecting to login');
-                 setAuth(null);
-                 navigate('/login');
+            // 401 is handled by useAxiosPrivate (refresh, or sign out if that fails)
+            if (axios.isAxiosError(err) && err.response?.status === 403) {
+                setError('Only admins can update reviews.');
+            } else if (axios.isAxiosError(err) && err.response?.status === 502) {
+                setError('Could not rank this review automatically. Please try again.');
             } else {
                 setError('Error updating review');
             }
-
         } finally {
             setSaving(false);
         }

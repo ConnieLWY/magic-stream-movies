@@ -1,4 +1,3 @@
-import "./App.css";
 import Header from "./components/header/Header";
 import Footer from "./components/footer/Footer";
 import Home from "./components/home/Home";
@@ -23,7 +22,7 @@ function App() {
   const handleLogout = async () => {
     try {
       // Server identifies the user from the refresh_token cookie and clears it
-      await axiosClient.post("/logout");
+      await axiosClient.post("/auth/logout");
     } catch (error) {
       console.error("Error logging out:", error);
     } finally {

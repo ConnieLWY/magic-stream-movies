@@ -1,57 +1,52 @@
 package database
 
 import (
+	"context"
 	"fmt"
-	"log"
-	"os"
 
-	dotenv "github.com/joho/godotenv"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-func Connect() *mongo.Client {
-	err := dotenv.Load(".env")
-
+// Connect opens a client and pings once, so connection problems surface at startup.
+// Never log the URI: it may contain a password.
+func Connect(ctx context.Context, uri string) (*mongo.Client, error) {
+	client, err := mongo.Connect(options.Client().ApplyURI(uri))
 	if err != nil {
-		log.Println("Warning: unable to find .env file")
+		return nil, fmt.Errorf("connect to mongodb: %w", err)
 	}
 
-	MongoDb := os.Getenv("MONGODB_URI")
-
-	if MongoDb == "" {
-		log.Fatal("MONGODB_URI not set!")
+	if err := client.Ping(ctx, nil); err != nil {
+		_ = client.Disconnect(context.Background())
+		return nil, fmt.Errorf("ping mongodb: %w", err)
 	}
 
-	fmt.Println("MongoDB URI:", MongoDb)
-
-	clientOptions := options.Client().ApplyURI(MongoDb)
-
-	client, err := mongo.Connect(clientOptions)
-
-	if err != nil {
-		return nil
-	}
-
-	return client
+	return client, nil
 }
 
-func OpenCollection(collectionName string, client *mongo.Client) *mongo.Collection {
-	err := dotenv.Load(".env")
-
-	if err != nil {
-		log.Println("Warning: unable to find .env file")
+// EnsureIndexes creates the unique indexes the application relies on. CreateMany is idempotent, so calling it on every start is safe.
+func EnsureIndexes(ctx context.Context, db *mongo.Database) error {
+	indexes := map[string][]mongo.IndexModel{
+		"users": {
+			{Keys: bson.D{{Key: "email", Value: 1}}, Options: options.Index().SetUnique(true)},
+		},
+		"movies": {
+			{Keys: bson.D{{Key: "imdb_id", Value: 1}}, Options: options.Index().SetUnique(true)},
+			{Keys: bson.D{{Key: "genre.genre_name", Value: 1}, {Key: "ranking.ranking_value", Value: 1}}},
+		},
+		"genres": {
+			{Keys: bson.D{{Key: "genre_id", Value: 1}}, Options: options.Index().SetUnique(true)},
+		},
+		"rankings": {
+			{Keys: bson.D{{Key: "ranking_value", Value: 1}}, Options: options.Index().SetUnique(true)},
+		},
 	}
 
-	databaseName := os.Getenv("DATABASE_NAME")
-
-	fmt.Println("Database Name:", databaseName)
-
-	collection := client.Database(databaseName).Collection(collectionName)
-
-	if collection == nil {
-		return nil
+	for collection, models := range indexes {
+		if _, err := db.Collection(collection).Indexes().CreateMany(ctx, models); err != nil {
+			return fmt.Errorf("create indexes on %s: %w", collection, err)
+		}
 	}
-
-	return collection
+	return nil
 }

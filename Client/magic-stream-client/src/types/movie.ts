@@ -20,3 +20,9 @@ export interface MovieModel {
   admin_review?: string
   ranking?: Ranking
 }
+
+// Response of PATCH /movies/:imdb_id/review
+export interface ReviewUpdateResponse {
+  admin_review: string
+  ranking: Ranking
+}

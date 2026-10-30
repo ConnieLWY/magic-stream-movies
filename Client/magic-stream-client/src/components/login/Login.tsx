@@ -4,10 +4,12 @@ import Button from "react-bootstrap/Button";
 import Alert from "react-bootstrap/Alert";
 import Spinner from "react-bootstrap/Spinner";
 import { useState, type SubmitEvent } from "react";
+import axios from "axios";
 import { axiosClient } from "../../api/axiosConfig";
 import useAuth from "../../hook/useAuth";
 import { BRAND } from "../../brand";
 import AuthShell from "../auth/AuthShell";
+import type { User } from "../../types/user";
 
 function Login() {
   const { setAuth } = useAuth();
@@ -26,20 +28,16 @@ function Login() {
     setError(null);
 
     try {
-      const response = await axiosClient.post("/login", { email, password });
-      console.log(response.data);
-      if (response.data.error) {
-        setError(response.data.error);
-        return;
-      }
+      const response = await axiosClient.post<User>("/auth/login", { email, password });
       // Access token stays in memory (auth state); refresh token was set as an HttpOnly cookie
       setAuth(response.data);
-
       navigate(from, { replace: true });
-      //navigate('/');
     } catch (err) {
-      console.error(err);
-      setError("Invalid email or password");
+      if (axios.isAxiosError(err) && err.response?.status === 429) {
+        setError("Too many attempts. Please wait a minute and try again.");
+      } else {
+        setError("Invalid email or password");
+      }
     } finally {
       setLoading(false);
     }

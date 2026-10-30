@@ -1,6 +1,7 @@
 import type { MovieModel } from "../../types/movie";
 import { Link } from "react-router-dom";
 import { PenIcon, PlayIcon } from "../brand/Icons";
+import useAuth from "../../hook/useAuth";
 
 interface MovieProps {
   movie: MovieModel;
@@ -8,6 +9,8 @@ interface MovieProps {
 }
 
 function Movie({ movie, updateMovieReview }: MovieProps) {
+  const { auth } = useAuth();
+  const isAdmin = auth?.role === "ADMIN";
   const genres = movie.genre?.map((g) => g.genre_name).join(" · ");
 
   const poster = (
@@ -44,15 +47,16 @@ function Movie({ movie, updateMovieReview }: MovieProps) {
         <h3 className="movie-title">{movie.title}</h3>
         <div className="movie-sub">
           <span>{genres || movie.imdb_id}</span>
-          {updateMovieReview && (
+          {/* Movie details are for signed-in users; only admins can edit the review */}
+          {updateMovieReview && auth && (
             <button
               type="button"
               className="btn btn-link-subtle"
               onClick={() => updateMovieReview(movie.imdb_id)}
-              aria-label={`Review ${movie.title}`}
+              aria-label={`${isAdmin ? "Edit" : "Read"} review: ${movie.title}`}
             >
-              <PenIcon size={13} />
-              Review
+              {isAdmin && <PenIcon size={13} />}
+              {isAdmin ? "Edit review" : "Read review"}
             </button>
           )}
         </div>

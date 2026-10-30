@@ -55,11 +55,7 @@ const useAxiosPrivate = () =>{
                 originalRequest.headers.Authorization = `Bearer ${user.access_token}`;
                 return axiosAuth(originalRequest);
             } catch (refreshError) {
-                if (
-                    axios.isAxiosError(refreshError) &&
-                    (refreshError.response?.status === 401 ||
-                        refreshError.response?.status === 403)
-                ) {
+                if (axios.isAxiosError(refreshError) && refreshError.response?.status === 401) {
                     console.error('❌ Refresh token has expired or is invalid.');
                     setAuth(null); // Clear auth state
                 }

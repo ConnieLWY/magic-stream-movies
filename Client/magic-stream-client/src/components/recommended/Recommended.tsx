@@ -19,7 +19,7 @@ function Recommended() {
       setMessage("");
 
       try {
-        const response = await axiosPrivate.get<MovieModel[]>("/recommendedmovies");
+        const response = await axiosPrivate.get<MovieModel[]>("/me/recommendations");
         setMovies(response.data ?? []);
 
         if (!response.data || response.data.length === 0) {

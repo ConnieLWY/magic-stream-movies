@@ -1,22 +1,23 @@
-# Node Dependencies
-client/magic-stream-client/node_modules/
-client/magic-stream-client/dist/
+# Node dependencies and build output
 node_modules/
 dist/
 
 # Go build artifacts
-Server/MagicStreamServer/app
-Server/MagicStreamServer/bin/
+Server/MagicStreamMoviesServer/bin/
 *.exe
 *.dll
 *.out
+coverage.*
 
-# OS files
+# OS / editor files
 .DS_Store
 .vscode/
+.idea/
 
-# Environment files
-Client/magic-stream-client/.env
-Server/MagicStreamServer/.env
+# Environment files (commit the .env.example templates instead)
 .env
-*.env
+.env.*
+!.env.example
+
+# Local database dumps (seed data lives in Server/MagicStreamMoviesServer/cmd/seed/data)
+dump/
